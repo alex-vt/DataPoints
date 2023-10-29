@@ -1,7 +1,7 @@
 # Data Points
 
 An app that collects and records device sensor readings to CSV file on Android 
-periodically and continuously in background.
+periodically in background.
 
 For every day a new CSV file is recorded to:
 ```
@@ -35,7 +35,7 @@ Example: `/sdcard/DataPoints/2023-12-25_MyPhone.csv`
 If a reading cannot be obtained, its recorded value will be 
 its CSV field header followed by a suffix depending on the reason:
 * `NoSensor`: app couldn't find the sensor to read the value from
-* `Missing`: the value was not obtained doe to denied permission
+* `Missing`: the value was not obtained due to denied permission
 * `Timeout`: it took abnormally long to read the value: 25 seconds for location, 2 seconds for other readings
 
 A line of sensor readings is added at every minute to the CSV file of the current day.
@@ -69,7 +69,7 @@ csvRelativePath=<new_path>
 Example: `csvRelativePath=Documents/Data/CSV`
 
 <details>
-<summary><small>For debug build</small></summary>
+<summary>For debug build</summary>
 
 The relative path of folder with CSV files in device internal storage is `DataPoints-debug` by default.
 
@@ -93,7 +93,7 @@ signingKeyPassword=<keystore.jks key password>
 ```
 
 <details>
-<summary><small>For debug build</small></summary>
+<summary>For debug build</summary>
 This step isn't required - debug keystore will be used instead automatically
 </details>
 
@@ -104,7 +104,7 @@ This step isn't required - debug keystore will be used instead automatically
 ```
 
 <details>
-<summary><small>For debug build</small></summary>
+<summary>For debug build</summary>
 
 ```
 ./gradlew app:installDebug
@@ -120,7 +120,7 @@ This step isn't required - debug keystore will be used instead automatically
 Then install `app/build/outputs/apk/release/app-release.apk` on Android device.
 
 <details>
-<summary><small>For debug build</small></summary>
+<summary>For debug build</summary>
 
 ```
 ./gradlew app:assembleDebug
@@ -135,7 +135,7 @@ Once installed and launched, the app will request permissions:
 
 | Permission             | If not granted                                                               |
 |------------------------|------------------------------------------------------------------------------|
-| Location, precise      | App will collect data points with missing location                           |
+| Location, fine         | App will collect data points with missing location                           |
 | Location, at all times | App will collect data points with missing location when its UI is not opened |
 | Notifications          | App will collect data points without visual indication                       |
 | Files access, all      | App will not collect or record data points                                   |
