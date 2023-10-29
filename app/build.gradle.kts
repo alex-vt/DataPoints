@@ -1,3 +1,4 @@
+import java.text.SimpleDateFormat
 import java.io.FileInputStream
 import java.util.*
 
@@ -15,7 +16,15 @@ android {
         minSdk = 31
         targetSdk = 34
         versionCode = (System.currentTimeMillis() / 10_000).toInt() // 10-second timestamp
-        versionName = "1"
+        versionName = listOfNotNull( // build time + commit hash if available
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss z").format(System.currentTimeMillis()),
+            Runtime.getRuntime().exec("git diff-index HEAD")
+                .inputStream.bufferedReader().use { it.readText() }
+                .takeIf { it.isNotBlank() }?.let { "modified" },
+            Runtime.getRuntime().exec("git rev-parse --short HEAD")
+                .inputStream.bufferedReader().use { it.readText() }
+                .takeIf { it.isNotBlank() }?.let { "commit ${it.trim()}" },
+        ).joinToString(separator = " ")
 
         vectorDrawables {
             useSupportLibrary = true
