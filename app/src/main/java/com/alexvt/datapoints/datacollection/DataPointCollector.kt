@@ -19,6 +19,9 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import java.io.File
@@ -52,24 +55,27 @@ private val dataPointsHeader =
         "DataPointDuration",
     )
 
-private suspend fun getDataPointsRow(timestamp: Long, location: Location?, context: Context) =
-    listOf(
-        getDate(timestamp),
-        getTime(timestamp),
-        getTimezone(timestamp),
-        getScreenState(context),
-        getBatteryPercent(context),
-        getUnlockState(context),
-        getLatitude(location),
-        getLongitude(location),
-        getPressure(context),
-        getBearing(context),
-        getPitch(context),
-        getAcceleration(context),
-        getTemperature(),
-        getLux(context),
-        getDataPointDuration(timestamp),
-    )
+private suspend fun getDataPointsRow(timestamp: Long, context: Context) =
+    coroutineScope {
+        val locationDeferred = async { getLocation(context) }
+        listOf(
+            async { getDate(timestamp) },
+            async { getTime(timestamp) },
+            async { getTimezone(timestamp) },
+            async { getScreenState(context) },
+            async { getBatteryPercent(context) },
+            async { getUnlockState(context) },
+            async { getLatitude(locationDeferred.await()) },
+            async { getLongitude(locationDeferred.await()) },
+            async { getPressure(context) },
+            async { getBearing(context) },
+            async { getPitch(context) },
+            async { getAcceleration(context) },
+            async { getTemperature() },
+            async { getLux(context) },
+        ).awaitAll() + // all readings in parallel...
+                getDataPointDuration(timestamp) // ...except duration: after all
+    }
 
 
 // Data point collection
@@ -80,7 +86,7 @@ fun getDataPointsForDate(timestamp: Long, context: Context): List<String> =
 suspend fun recordDataPoint(timestamp: Long, context: Context) {
     getTodayDataPointsFile(timestamp, context)
         .appendText(
-            getDataPointsRow(timestamp, location = getLocation(context), context)
+            getDataPointsRow(timestamp, context)
                 .joinToString(prefix = "\n", separator = ",")
         )
 }
