@@ -49,6 +49,7 @@ private val dataPointsHeader =
         "Pressure",
         "Bearing",
         "Pitch",
+        "Tilt",
         "Acceleration",
         "Temperature",
         "Lux",
@@ -70,6 +71,7 @@ private suspend fun getDataPointsRow(timestamp: Long, context: Context) =
             async { getPressure(context) },
             async { getBearing(context) },
             async { getPitch(context) },
+            async { getTilt(context) },
             async { getAcceleration(context) },
             async { getTemperature() },
             async { getLux(context) },
@@ -166,6 +168,11 @@ private suspend fun getPitch(context: Context): String =
                 else -> this
             }
         }.toString()
+    }
+
+private suspend fun getTilt(context: Context): String =
+    getSensorReadout(context, type = Sensor.TYPE_ORIENTATION, title = "Tilt") {
+        get(2).unaryMinus().toString()
     }
 
 private suspend fun getAcceleration(context: Context): String =

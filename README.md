@@ -27,6 +27,7 @@ Example: `/sdcard/DataPoints/2023-12-25_MyPhone.csv`
 | Pressure          | Hectopascals             |                                                                 |
 | Bearing           | Degrees                  | Range: 0 until 360                                              |
 | Pitch             | Degrees                  | 0: device flat <br>-90: pointing down <br>90: pointing up       |
+| Tilt              | Degrees                  | 0: device flat <br>-90: facing left <br>90: facing right        |
 | Acceleration      | m/s<sup>2</sup>          | Absolute value regardless of direction <br>0: device stationary |
 | Temperature       | Degrees  °C              |                                                                 |
 | Lux               | Lux                      |                                                                 |
