@@ -26,6 +26,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.nio.charset.Charset
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.coroutines.resume
@@ -140,45 +141,69 @@ private fun getLatitude(
     title: String = "Latitude",
     readingMissingSuffix: String = "Missing",
 ): String =
-    location?.latitude?.toFloat()?.toString() ?: "$title$readingMissingSuffix"
+    location?.latitude?.toString(maxDecimalPlaces = 6) ?: "$title$readingMissingSuffix"
 
 private fun getLongitude(
     location: Location?,
     title: String = "Longitude",
     readingMissingSuffix: String = "Missing",
 ): String =
-    location?.longitude?.toFloat()?.toString() ?: "$title$readingMissingSuffix"
+    location?.longitude?.toString(maxDecimalPlaces = 6) ?: "$title$readingMissingSuffix"
 
 private suspend fun getPressure(context: Context): String =
-    getSensorReadout(context, type = Sensor.TYPE_PRESSURE, title = "Pressure") {
-        get(0).toString()
+    getSensorReadout(
+        context,
+        type = Sensor.TYPE_PRESSURE,
+        maxDecimalPlaces = 3,
+        title = "Pressure",
+    ) {
+        get(0)
     }
 
 private suspend fun getBearing(context: Context): String =
-    getSensorReadout(context, type = Sensor.TYPE_ORIENTATION, title = "Bearing") {
-        get(0).toString()
+    getSensorReadout(
+        context,
+        type = Sensor.TYPE_ORIENTATION,
+        maxDecimalPlaces = 1,
+        title = "Bearing",
+    ) {
+        get(0)
     }
 
 private suspend fun getPitch(context: Context): String =
-    getSensorReadout(context, type = Sensor.TYPE_ORIENTATION, title = "Pitch") {
+    getSensorReadout(
+        context,
+        type = Sensor.TYPE_ORIENTATION,
+        maxDecimalPlaces = 2,
+        title = "Pitch",
+    ) {
         get(1).unaryMinus().run { // enforce pitch range to -90..90 degrees
             when {
                 this > 90 -> 180 - this
                 this < -90 -> -180 - this
                 else -> this
             }
-        }.toString()
+        }
     }
 
 private suspend fun getTilt(context: Context): String =
-    getSensorReadout(context, type = Sensor.TYPE_ORIENTATION, title = "Tilt") {
-        get(2).unaryMinus().toString()
+    getSensorReadout(
+        context,
+        type = Sensor.TYPE_ORIENTATION,
+        maxDecimalPlaces = 2,
+        title = "Tilt",
+    ) {
+        get(2).unaryMinus()
     }
 
 private suspend fun getAcceleration(context: Context): String =
-    getSensorReadout(context, type = Sensor.TYPE_ACCELEROMETER, title = "Acceleration") {
+    getSensorReadout(
+        context,
+        type = Sensor.TYPE_ACCELEROMETER,
+        maxDecimalPlaces = 3,
+        title = "Acceleration",
+    ) {
         abs(sqrt(get(0) * get(0) + get(1) * get(1) + get(2) * get(2)) - SensorManager.GRAVITY_EARTH)
-            .toString()
     }
 
 private fun getTemperature(
@@ -187,13 +212,19 @@ private fun getTemperature(
 ): String {
     val thermalSensorPath = "/sys/devices/virtual/thermal/thermal_zone0/temp"
     return File(thermalSensorPath)
-        .readLines(Charset.defaultCharset()).firstOrNull()?.run { toInt() / 1000 }?.toString()
+        .readLines(Charset.defaultCharset()).firstOrNull()?.run { toFloat() / 1000 }
+        ?.toString(maxDecimalPlaces = 2)
         ?: "$title$readingNoSensorSuffix"
 }
 
 private suspend fun getLux(context: Context): String =
-    getSensorReadout(context, type = Sensor.TYPE_LIGHT, title = "Lux") {
-        get(0).toString()
+    getSensorReadout(
+        context,
+        type = Sensor.TYPE_LIGHT,
+        maxDecimalPlaces = 1,
+        title = "Lux",
+    ) {
+        get(0)
     }
 
 private fun getDataPointDuration(timestamp: Long): String =
@@ -232,10 +263,11 @@ private suspend fun getSensorReadout(
     context: Context,
     type: Int,
     title: String,
+    maxDecimalPlaces: Int = 0,
     noSensorSuffix: String = "NoSensor",
     readingMissingSuffix: String = "Missing",
     readingTimeoutSuffix: String = "Timeout",
-    valueExtractor: FloatArray.() -> String,
+    valueExtractor: FloatArray.() -> Number,
 ): String =
     try {
         val sensorDataRetrievalTimeoutMillis = 2_000L
@@ -253,8 +285,10 @@ private suspend fun getSensorReadout(
 
                     override fun onSensorChanged(event: SensorEvent?) {
                         sensorManager.unregisterListener(this)
-                        continuation.resume(event?.values?.run { valueExtractor() }
-                            ?: "$title$readingMissingSuffix")
+                        continuation.resume(
+                            event?.values?.run { valueExtractor() }?.toString(maxDecimalPlaces)
+                                ?: "$title$readingMissingSuffix"
+                        )
                     }
                 }
                 sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_UI)
@@ -264,3 +298,10 @@ private suspend fun getSensorReadout(
     } catch (timeoutException: TimeoutCancellationException) {
         "$title$readingTimeoutSuffix"
     }
+
+private fun Number.toString(maxDecimalPlaces: Int): String {
+    val integerPlaceFormat = "#"
+    val decimalPointFormat = if (maxDecimalPlaces > 0) "." else ""
+    val decimalPlaceFormat = "#".repeat(maxDecimalPlaces)
+    return DecimalFormat("$integerPlaceFormat$decimalPointFormat$decimalPlaceFormat").format(this)
+}
