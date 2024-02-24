@@ -7,10 +7,10 @@ For every day a new CSV file is recorded to:
 ```
 /<internal_storage>/<csv_relative_path>/<date_iso_8601>_<device_name>.csv
 ```
-* `<csv_relative_path>` is typically `DataPoints` folder - to change, see _Configure_ below
+* `<csv_relative_path>` is typically `SensorDataPoints` folder - to change, see _Configure_ below
 * `<device_name>` is the user-editable device name in Android settings
 
-Example: `/sdcard/DataPoints/2023-12-25_MyPhone.csv`
+Example: `/sdcard/SensorDataPoints/2023-12-25_MyPhone.csv`
 
 ### Data structure
 
@@ -59,7 +59,7 @@ cd DataPoints
 
 ### Configure
 
-The relative path of folder with CSV files in device internal storage is `DataPoints` by default.
+The relative path of folder with CSV files in device internal storage is `SensorDataPoints` by default.
 
 To override it with a new path, create, or put line to `secrets.properties` in the project's root folder:
 
@@ -72,7 +72,7 @@ Example: `csvRelativePath=Documents/Data/CSV`
 <details>
 <summary>For debug build</summary>
 
-The relative path of folder with CSV files in device internal storage is `DataPoints-debug` by default.
+The relative path of folder with CSV files in device internal storage is `SensorDataPoints-debug` by default.
 
 To override it with a new path, create, or put line to `secrets.properties` in the project's root folder:
 
